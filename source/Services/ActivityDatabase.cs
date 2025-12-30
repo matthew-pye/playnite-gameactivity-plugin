@@ -1,18 +1,19 @@
-﻿using GameActivity.Models;
+﻿using CommonPlayniteShared.Common;
+using CommonPlayniteShared.Converters;
+using CommonPluginsShared;
+using CommonPluginsShared.Collections;
+using CommonPluginsShared.Converters;
+using CommonPluginsShared.Extensions;
+using GameActivity.Models;
+using GameActivity.Models.ExportData;
 using Playnite.SDK;
 using Playnite.SDK.Models;
-using CommonPluginsShared.Collections;
 using System;
 using System.Collections.Generic;
-using CommonPlayniteShared.Common;
-using CommonPlayniteShared.Converters;
+using System.Diagnostics;
 using System.Globalization;
-using CommonPluginsShared;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
-using GameActivity.Models.ExportData;
-using CommonPluginsShared.Extensions;
 
 namespace GameActivity.Services
 {
@@ -241,49 +242,75 @@ namespace GameActivity.Services
                 }
                 else
                 {
-                    x.Value.Items.ForEach(y =>
+                    //x.Value.Items.ForEach(y =>
+                    //{
+                    //    if (a.CancelToken.IsCancellationRequested)
+                    //    {
+                    //        return;
+                    //    }
+                    //
+                    //    a.Text = $"{PluginName} - {ResourceProvider.GetString("LOCCommonExtracting")}"
+                    //        + "\n\n" + $"{a.CurrentProgressValue}/{a.ProgressMaxValue}"
+                    //        + "\n" + x.Value.Game?.Name + (x.Value.Game?.Source == null ? string.Empty : $" ({x.Value.Game?.Source.Name})");
+                    //
+                    //    TimeSpan ts = new TimeSpan(0, 0, (int)y.ElapsedSeconds);
+                    //    string playtimeFormat = string.Format("{0:00}:{1:00}:{1:00}", ts.Hours, ts.Minutes, ts.Seconds);
+                    //
+                    //    List<ActivityDetailsData> details = x.Value.ItemsDetails.Get((DateTime)y.DateSession);
+                    //    details.ForEach(z =>
+                    //    {
+                    //        ExportDataAll exportDataAll = new ExportDataAll
+                    //        {
+                    //            Name = x.Value.Name,
+                    //            SourceName = x.Value.Source?.Name ?? x.Value.Platforms?.First()?.Name ?? "Playnite",
+                    //            Session = y.DateSession,
+                    //            DateTimeValue = z.Datelog,
+                    //            Playtime = y.ElapsedSeconds,
+                    //            PlaytimeFormat = playtimeFormat,
+                    //            PC = y.Configuration.Name,
+                    //            CPU = z.CPU,
+                    //            RAM = z.RAM,
+                    //            GPU = z.GPU,
+                    //            FPS = z.FPS,
+                    //            CPUT = z.CPUT,
+                    //            GPUT = z.GPUT,
+                    //            CPUP = z.CPUP,
+                    //            GPUP = z.GPUP
+                    //        };
+                    //        exportDataAlls.Add(exportDataAll);
+                    //    });
+                    //    a.CurrentProgressValue++;
+                    //});
+
+                    foreach (var value in x.Value.Items)
                     {
+                        TimeSpan ts = new TimeSpan(0, 0, (int)value.ElapsedSeconds);
+                        string playtimeFormat = string.Format("{0:00}:{1:00}:{1:00}", ts.Hours, ts.Minutes, ts.Seconds);
                         if (a.CancelToken.IsCancellationRequested)
                         {
                             return;
                         }
 
-                        a.Text = $"{PluginName} - {ResourceProvider.GetString("LOCCommonExtracting")}"
-                            + "\n\n" + $"{a.CurrentProgressValue}/{a.ProgressMaxValue}"
-                            + "\n" + x.Value.Game?.Name + (x.Value.Game?.Source == null ? string.Empty : $" ({x.Value.Game?.Source.Name})");
-
-                        TimeSpan ts = new TimeSpan(0, 0, (int)y.ElapsedSeconds);
-                        string playtimeFormat = string.Format("{0:00}:{1:00}:{1:00}", ts.Hours, ts.Minutes, ts.Seconds);
-
-                        List<ActivityDetailsData> details = x.Value.ItemsDetails.Get((DateTime)y.DateSession);
-                        details.ForEach(z =>
+                        ExportDataAll exportDataAll = new ExportDataAll
                         {
-                            ExportDataAll exportDataAll = new ExportDataAll
-                            {
-                                Name = x.Value.Name,
-                                SourceName = x.Value.Source?.Name ?? x.Value.Platforms?.First()?.Name ?? "Playnite",
-                                Session = y.DateSession,
-                                DateTimeValue = z.Datelog,
-                                Playtime = y.ElapsedSeconds,
-                                PlaytimeFormat = playtimeFormat,
-                                PC = y.Configuration.Name,
-                                CPU = z.CPU,
-                                RAM = z.RAM,
-                                GPU = z.GPU,
-                                FPS = z.FPS,
-                                CPUT = z.CPUT,
-                                GPUT = z.GPUT,
-                                CPUP = z.CPUP,
-                                GPUP = z.GPUP
-                            };
-                            exportDataAlls.Add(exportDataAll);
-                        });
-                        a.CurrentProgressValue++;
-                    });
+                            Name = x.Value.Name,
+                            SourceName = value.SourceName,
+                            Session = value.DateSession,
+                            Playtime = value.ElapsedSeconds,
+                            PlaytimeFormat = playtimeFormat,
+                            PC = value.Configuration.Name,
+                        };
+                        exportDataAlls.Add(exportDataAll);
+                    }
                 }
             });
 
-            return minimum ? exportDatas.ToCsv(false, ";", false, header) : exportDataAlls.ToCsv(false, ";", false, header);
+            if(minimum)
+            {
+                return exportDatas.ToCsv(false, ";", false, header);
+            }
+
+            return exportDataAlls.ToCsv(false, ";", false, header);
         }
 
 
